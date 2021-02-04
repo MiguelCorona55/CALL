@@ -1,6 +1,10 @@
 import logging
+import pathlib
+
 import boto3
 from botocore.exceptions import ClientError
+
+from settings import AUDIO_DIR_S3
 
 
 def create_bucket(name, region=None):
@@ -39,11 +43,13 @@ def upload_file(file, bucket, name=None):
     """Upload a file to a bucket with an optional name"""
 
     if name is None:
-        name = file
-
+        if isinstance(file, pathlib.PurePath):
+            name = file.name
+        else:
+            name = pathlib.Path(file).name
     try:
         s3_client = boto3.client('s3')
-        s3_client.upload_file(file, bucket, name)
+        s3_client.upload_file(file, bucket, AUDIO_DIR_S3 + name)
     except ClientError as e:
         logging.error(e)
         return False
