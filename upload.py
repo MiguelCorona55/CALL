@@ -8,5 +8,5 @@ print('Starting process..')
 for entry in os.listdir(settings.AUDIO_DIR):
     path = os.path.join(settings.AUDIO_DIR, entry)
     if os.path.isfile(path):
-        s3.upload_file(path, settings.BUCKET_NAME)
+        s3.upload_file(path, settings.BUCKET_NAME_AUDIO)
 print('Process finished')

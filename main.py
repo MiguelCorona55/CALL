@@ -13,11 +13,15 @@ try:
     bucket_waiter = s3_client.get_waiter('bucket_exists')
     object_waiter = s3_client.get_waiter('object_exists')
 
-    s3.create_bucket(settings.BUCKET_NAME, settings.REGION)
-    bucket_waiter.wait(Bucket=settings.BUCKET_NAME)
-    s3.create_folders([settings.AUDIO_DIR_S3, settings.TRANSCRIPTIONS_DIR], settings.BUCKET_NAME)
-    object_waiter.wait(Bucket=settings.BUCKET_NAME, Key=settings.AUDIO_DIR_S3)
-    object_waiter.wait(Bucket=settings.BUCKET_NAME, Key=settings.TRANSCRIPTIONS_DIR)
+    s3.create_bucket(settings.BUCKET_NAME_AUDIO, settings.REGION)
+    bucket_waiter.wait(Bucket=settings.BUCKET_NAME_AUDIO)
+    s3.create_folders([settings.AUDIO_DIR_S3], settings.BUCKET_NAME_AUDIO)
+    s3.create_bucket(settings.BUCKET_NAME_TRANSCRIPTIONS, settings.REGION)
+    bucket_waiter.wait(Bucket=settings.BUCKET_NAME_TRANSCRIPTIONS)
+    s3.create_folders([settings.TRANSCRIPTIONS_DIR], settings.BUCKET_NAME_TRANSCRIPTIONS)
+
+    object_waiter.wait(Bucket=settings.BUCKET_NAME_AUDIO, Key=settings.AUDIO_DIR_S3)
+    object_waiter.wait(Bucket=settings.BUCKET_NAME_TRANSCRIPTIONS, Key=settings.TRANSCRIPTIONS_DIR)
 
     # IAM setup
     iam_client = boto3.client('iam')

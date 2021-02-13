@@ -6,7 +6,15 @@ from botocore.exceptions import ClientError
 
 
 def create_policy(name, document):
-    """Create a new policy based on a json file"""
+    """Create a new policy from a json file.
+
+    Parameters
+    ----------
+    name : str
+        The policy name.
+    document : path
+        A path for the json file with instructions for creating a policy.
+    """
     try:
         iam_client = boto3.client('iam')
         doc_json = json.load(document)
@@ -18,7 +26,15 @@ def create_policy(name, document):
 
 
 def create_role(name, document):
-    """Create a new role based on a json file"""
+    """Create a new role based on a json file
+
+    Parameters
+    ----------
+    name : str
+        The role name.
+    document : path
+        A path for the json file with instructions for creating a role.
+    """
     try:
         iam_client = boto3.client('iam')
         with open(document) as doc_json:
@@ -31,7 +47,15 @@ def create_role(name, document):
 
 
 def attach_policy(role_name, policy_arn):
-    """Attach an existent policy to an existent role"""
+    """Attach an existent policy to an existent role.
+
+    Parameters
+    ----------
+    role_name : str
+        The role name.
+    policy_arn : str
+        A string representing the ARN of the policy.
+    """
     try:
         iam_client = boto3.client('iam')
         iam_client.attach_role_policy(PolicyArn=policy_arn, RoleName=role_name)
