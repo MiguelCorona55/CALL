@@ -9,6 +9,8 @@ from aws_tools import iam, lmbd, cwe, s3
 
 print('Starting setup...')
 
+func_names = {'transcribe_audio': settings.TRANSCRIBE_FUNC_NAME, 'parse_transcription': settings.PARSE_FUNC_NAME}
+
 try:
 
     # S3 setup
@@ -40,6 +42,7 @@ try:
     # Lambda
     lambda_client = boto3.client('lambda')
     time.sleep(10)
+
     for function_path in settings.LAMBDA_DIR.iterdir():
         if function_path.stem == settings.PARSE_FUNC_NAME:
             environ = {'BUCKET_NAME_TRANSCRIPTIONS': settings.BUCKET_NAME_TRANSCRIPTIONS}
@@ -48,7 +51,7 @@ try:
         with open(function_path, 'rb') as code:
             role_arn = iam.get_role_arn(settings.LAMBDA_ROLE_NAME)
             lmbd.create_function(
-                function_path.stem,
+                func_names[function_path.stem],
                 role_arn,
                 code.read(),
                 f'{function_path.stem}.lambda_handler',

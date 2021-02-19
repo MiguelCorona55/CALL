@@ -57,6 +57,7 @@ def upload_file(fp, bucket, name=None):
     if name is None:
         if isinstance(fp, pathlib.PurePath):
             name = fp.name
+            fp = str(fp)
         else:
             name = pathlib.Path(fp).name
 
