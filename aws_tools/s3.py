@@ -1,8 +1,6 @@
-import logging
 import pathlib
 
 import boto3
-from botocore.exceptions import ClientError
 
 from settings import AUDIO_DIR_S3
 
@@ -17,20 +15,14 @@ def create_bucket(name, region=None):
     region : str
         The code for the region. The default value is None.
     """
-
-    try:
-        if region is None:
-            s3_client = boto3.client('s3')
-            s3_client.create_bucket(Bucket=name)
-        else:
-            s3_client = boto3.client('s3', region_name=region)
-            location = {'LocationConstraint': region}
-            s3_client.create_bucket(Bucket=name,
-                                    CreateBucketConfiguration=location)
-    except ClientError as e:
-        logging.error(e)
-        return False
-    return True
+    if region is None:
+        s3_client = boto3.client('s3')
+        s3_client.create_bucket(Bucket=name)
+    else:
+        s3_client = boto3.client('s3', region_name=region)
+        location = {'LocationConstraint': region}
+        s3_client.create_bucket(Bucket=name,
+                                CreateBucketConfiguration=location)
 
 
 def create_folders(folders, bucket):
@@ -43,15 +35,9 @@ def create_folders(folders, bucket):
     bucket : str
         The name of the bucket in which the folders are going to be created.
     """
-
-    try:
-        s3_client = boto3.client('s3')
-        for folder in folders:
-            s3_client.put_object(Bucket=bucket, Key=folder)
-    except ClientError as e:
-        logging.error(e)
-        return False
-    return True
+    s3_client = boto3.client('s3')
+    for folder in folders:
+        s3_client.put_object(Bucket=bucket, Key=folder)
 
 
 def upload_file(fp, bucket, name=None):
@@ -74,10 +60,5 @@ def upload_file(fp, bucket, name=None):
         else:
             name = pathlib.Path(fp).name
 
-    try:
-        s3_client = boto3.client('s3')
-        s3_client.upload_file(fp, bucket, AUDIO_DIR_S3 + name)
-    except ClientError as e:
-        logging.error(e)
-        return False
-    return True
+    s3_client = boto3.client('s3')
+    s3_client.upload_file(fp, bucket, AUDIO_DIR_S3 + name)
