@@ -11,9 +11,9 @@ def create_bucket(name, region=None):
     Parameters
     ----------
     name : str
-        The name of the bucket.
+        Name of the bucket.
     region : str
-        The code for the region. The default value is None.
+        Code for the region. The default value is None.
     """
     if region is None:
         s3_client = boto3.client('s3')
@@ -46,11 +46,11 @@ def upload_file(fp, bucket, name=None):
     Parameters
     ----------
     fp : str or pathlib.PurePath
-        A string or an instance of pathlib.PurePath containing the path of the file.
+        The file path.
     bucket : str
-        The name of the bucket.
+        Name of the bucket.
     name: str
-        The name for the file once it is uploaded. The default value is None. If name is None, 
+        Name for the file once it is uploaded. The default value is None. If name is None,
         the file will be uploaded with it's original name.
     """
 

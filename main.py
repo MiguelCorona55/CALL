@@ -9,7 +9,12 @@ from aws_tools import iam, lmbd, cwe, s3
 
 print('Starting setup...')
 
-func_names = {'transcribe_audio': settings.TRANSCRIBE_FUNC_NAME, 'parse_transcription': settings.PARSE_FUNC_NAME}
+# This dict is for letting the user change the functions names without needing to change the zip files names when
+# creating tha lambda functions
+func_names = {
+    'transcribe_audio': settings.TRANSCRIBE_FUNC_NAME,
+    'parse_transcription': settings.PARSE_FUNC_NAME
+}
 
 try:
 
@@ -18,15 +23,17 @@ try:
     bucket_waiter = s3_client.get_waiter('bucket_exists')
     object_waiter = s3_client.get_waiter('object_exists')
 
-    s3.create_bucket(settings.BUCKET_NAME_AUDIO, settings.REGION)
-    bucket_waiter.wait(Bucket=settings.BUCKET_NAME_AUDIO)
-    s3.create_folders([settings.AUDIO_DIR_S3], settings.BUCKET_NAME_AUDIO)
-    s3.create_bucket(settings.BUCKET_NAME_TRANSCRIPTIONS, settings.REGION)
-    bucket_waiter.wait(Bucket=settings.BUCKET_NAME_TRANSCRIPTIONS)
-    s3.create_folders([settings.TRANSCRIPTIONS_DIR], settings.BUCKET_NAME_TRANSCRIPTIONS)
+    s3.create_bucket(settings.AUDIO_BUCKET_NAME, settings.REGION)
+    bucket_waiter.wait(Bucket=settings.AUDIO_BUCKET_NAME)
+    s3.create_folders([settings.AUDIO_DIR_S3], settings.AUDIO_BUCKET_NAME)
 
-    object_waiter.wait(Bucket=settings.BUCKET_NAME_AUDIO, Key=settings.AUDIO_DIR_S3)
-    object_waiter.wait(Bucket=settings.BUCKET_NAME_TRANSCRIPTIONS, Key=settings.TRANSCRIPTIONS_DIR)
+    s3.create_bucket(settings.TRANSCRIPTIONS_BUCKET_NAME, settings.REGION)
+    bucket_waiter.wait(Bucket=settings.TRANSCRIPTIONS_BUCKET_NAME)
+    s3.create_folders([settings.TRANSCRIPTIONS_DIR], settings.TRANSCRIPTIONS_BUCKET_NAME)
+
+    # object_waiter.wait(Bucket=settings.AUDIO_BUCKET_NAME, Key=settings.AUDIO_DIR_S3)
+    # object_waiter.wait(Bucket=settings.TRANSCRIPTIONS_BUCKET_NAME, Key=settings.TRANSCRIPTIONS_DIR)
+    # object_waiter.wait(Bucket=settings.CLASSIFICATION_BUCKET_NAME, Key=settings.AUDIO_DIR_S3)
 
     # IAM setup
     iam_client = boto3.client('iam')
@@ -44,14 +51,20 @@ try:
     time.sleep(10)
 
     for function_path in settings.LAMBDA_DIR.iterdir():
-        if function_path.stem == settings.PARSE_FUNC_NAME:
-            environ = {'BUCKET_NAME_TRANSCRIPTIONS': settings.BUCKET_NAME_TRANSCRIPTIONS}
+        func_name = func_names[function_path.stem]
+        if func_name == settings.PARSE_FUNC_NAME:
+            environ = {
+                'TRANSCRIPTIONS_BUCKET_NAME': settings.TRANSCRIPTIONS_BUCKET_NAME,
+                'TRANSCRIPTIONS_DIR': settings.TRANSCRIPTIONS_DIR
+            }
+        elif func_name == settings.TRANSCRIBE_FUNC_NAME:
+            environ = {'LANGUAGE_CODE': settings.LANGUAGE_CODE}
         else:
             environ = None
         with open(function_path, 'rb') as code:
             role_arn = iam.get_role_arn(settings.LAMBDA_ROLE_NAME)
             lmbd.create_function(
-                func_names[function_path.stem],
+                func_name,
                 role_arn,
                 code.read(),
                 f'{function_path.stem}.lambda_handler',
@@ -63,7 +76,7 @@ try:
 
     lmbd.add_s3_trigger(
         settings.TRANSCRIBE_FUNC_NAME,
-        settings.BUCKET_NAME_AUDIO,
+        settings.AUDIO_BUCKET_NAME,
         ['s3:ObjectCreated:*'],
         settings.TRANSCRIBE_FUNC_NAME + '_event',
         {
